@@ -1,14 +1,14 @@
-import unittest
+import tensorflow as tf
 
 from main.CV2ImagePreprocessor import CV2ImagePreprocessor
 from main.IAMDatasetPreparator import IAMDatasetPreparator
-from main.TFNetwork2 import TensorflowNetwork
+from main.TFNetwork import TensorflowNetwork
 from test_files.configs.dummy_dataset_config import DatasetConfig
 from test_files.configs.dummy_network_config import NetworkConfig
 from test_files.configs.dummy_train_config import TrainConfig
 
 
-class NetworkTest(unittest.TestCase):
+class NetworkTest(tf.test.TestCase):
     def setUp(self):
         network_config = NetworkConfig()
         self.network = TensorflowNetwork(network_config)
@@ -26,4 +26,4 @@ class NetworkTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    tf.test.main()

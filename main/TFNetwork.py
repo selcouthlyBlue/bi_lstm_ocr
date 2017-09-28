@@ -6,6 +6,7 @@ import tensorflow as tf
 import time
 import numpy as np
 
+from main.DataIterator import DataIterator
 from main.EncoderDecoder import EncoderDecoder
 from main.interfaces.network import Network
 
@@ -21,67 +22,77 @@ class TensorflowNetwork(Network):
             self.inputs = tf.placeholder(tf.float32, [None, None, network_config.num_features])
             self.labels = tf.sparse_placeholder(tf.int32)
             self.seq_len = tf.placeholder(tf.int32, [None])
-            logits = self.bidirectional_lstm_layers(network_config.num_hidden_units,
-                                                    network_config.num_layers,
-                                                    network_config.num_classes)
+
+            logits = self.bidirectional_lstm_layers(
+                network_config.num_hidden_units,
+                network_config.num_layers,
+                network_config.num_classes
+            )
+
+            self.global_step = tf.Variable(0, trainable=False)
             self.loss = tf.nn.ctc_loss(labels=self.labels, inputs=logits, sequence_length=self.seq_len)
             self.cost = tf.reduce_mean(self.loss)
+
             self.optimizer = tf.train.AdamOptimizer(network_config.learning_rate).minimize(self.cost)
-            self.decoded, self.log_prob = tf.nn.ctc_beam_search_decoder(logits, self.seq_len)
+            self.decoded, self.log_prob = tf.nn.ctc_beam_search_decoder(inputs=logits, sequence_length=self.seq_len, merge_repeated=False)
+            self.dense_decoded = tf.sparse_tensor_to_dense(self.decoded[0], default_value=-1)
             self.label_error_rate = tf.reduce_mean(tf.edit_distance(tf.cast(self.decoded[0], tf.int32), self.labels))
+
+            tf.summary.scalar('cost', self.cost)
+            self.merged_summary = tf.summary.merge_all()
         super(TensorflowNetwork, self).__init__(network_config)
 
     def train(self, train_config, train_features, validation_features, train_labels=None, validation_labels=None):
         encoder_decoder = EncoderDecoder()
         encoder_decoder.initialize_encode_and_decode_maps_from(load_charset(train_config.charset_file))
-        num_examples = len(train_features)
-        num_batches_per_epoch = int(num_examples/train_config.batch_size)
+
+        encoded_train_labels = []
+        encoded_val_labels = []
+        for train_label in train_labels:
+            encoded_train_labels.append(encoder_decoder.encode(train_label))
+        for val_label in validation_labels:
+            encoded_val_labels.append(encoder_decoder.encode(val_label))
+        train_labels = encoded_train_labels
+        validation_labels = encoded_val_labels
+
+        print('loading train data, please wait---------------------', end=' ')
+        train_feeder = DataIterator(train_features, train_labels, train_config.batch_size)
+        print('number of training images: ', train_feeder.get_number_of_examples())
+
+        print('loading validation data, please wait---------------------', end=' ')
+        val_feeder = DataIterator(validation_features, validation_labels, train_config.batch_size)
+        print('number of training images: ', train_feeder.get_number_of_examples())
+
+        num_train_samples = train_feeder.get_number_of_examples()
+        num_batches_per_epoch = int(num_train_samples/train_config.batch_size)
+
         with tf.Session(graph=self.graph) as sess:
-            tf.global_variables_initializer().run()
+            sess.run(tf.global_variables_initializer())
+
+            print('=============================begin training=============================')
+            val_inputs, val_seq_len, val_labels = val_feeder.get_whole_data()
+            val_feed = {
+                self.inputs: val_inputs,
+                self.labels: val_labels,
+                self.seq_len: val_seq_len
+            }
 
             for current_epoch in range(train_config.num_epochs):
+                shuffle_index = np.random.permutation(num_train_samples)
                 train_cost = train_label_error_rate = 0
                 start = time.time()
 
-                for batch in range(num_batches_per_epoch):
-                    indices = np.asarray([i % num_examples
-                                          for i in range(batch * train_config.batch_size,
-                                                        (batch + 1) * train_config.batch_size)],
-                                                        dtype=np.int64)
-
-                    def get_input_lens(sequences):
-                        lengths = np.asarray([len(s) for s in sequences], dtype=np.int64)
-                        return sequences, lengths
-
-                    batch_train_inputs = [train_features[i] for i in indices]
-                    batch_train_inputs, batch_train_seq_len = get_input_lens(np.array(batch_train_inputs))
-                    encoded_batch_train_labels = [encoder_decoder.encode(label) for label in train_labels]
-                    batch_train_labels = self.__sparse_tuple_from(
-                        [encoded_batch_train_labels[i] for i in indices]
-                    )
-
-                    print(len(batch_train_seq_len))
-
-                    feed = {
+                for current_batch_number in range(num_batches_per_epoch):
+                    batch_train_inputs, batch_train_seq_len, batch_train_labels = train_feeder.get_next_batch(current_batch_number, shuffle_index)
+                    train_feed = {
                         self.inputs: batch_train_inputs,
                         self.labels: batch_train_labels,
                         self.seq_len: batch_train_seq_len
                     }
 
-                    batch_cost, _ = sess.run([self.cost, self.optimizer], feed_dict=feed)
+                    summary_str, batch_cost, step, _ = sess.run([self.merged_summary, self.cost, self.global_step, self.optimizer], train_feed)
                     train_cost += batch_cost * train_config.batch_size
-                    train_label_error_rate += sess.run(self.label_error_rate, feed_dict=feed) * train_config.batch_size
-
-                shuffled_indices = np.random.permutation(num_examples)
-                train_features = train_features[shuffled_indices]
-                train_labels = train_labels[shuffled_indices]
-
-                train_cost /= num_examples
-                train_label_error_rate /= num_examples
-
-                log ="Epoch {}/{}, train_cost = {:.3f}, train_ler = {:.3f}, time = {:.3f}"
-                print(log.format(current_epoch+1, train_config.num_epochs, train_cost, train_label_error_rate,
-                                 time.time() - start))
+                    print(train_cost)
 
     def test(self, test_features, test_labels=None):
         print("I'm testing!")
@@ -111,8 +122,6 @@ class TensorflowNetwork(Network):
         logits = tf.reshape(logits, [batch_size, -1, num_classes])
         logits = tf.transpose(logits, (1, 0, 2))
 
-        # Time major
-        logits = tf.transpose(logits, (1, 0, 2))
         return logits
 
     @staticmethod
