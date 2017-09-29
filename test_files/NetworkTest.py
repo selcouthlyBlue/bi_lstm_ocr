@@ -1,3 +1,4 @@
+import shutil
 import tensorflow as tf
 
 from main.CV2ImagePreprocessor import CV2ImagePreprocessor
@@ -18,11 +19,15 @@ class NetworkTest(tf.test.TestCase):
         images = CV2ImagePreprocessor.resize(images, (1024, 128))
         self.train_data, self.train_labels, self.val_data, self.val_labels, self.test_data, self.test_labels = \
             IAMDatasetPreparator.split_into_train_validation_and_test_sets(images, 0.5, 0.5, labels)
+        self.train_config = TrainConfig()
 
     def test_train_network(self):
-        train_config = TrainConfig()
-        self.network.train(train_config, train_features=self.train_data, validation_features=self.val_data,
+        self.network.train(self.train_config, train_features=self.train_data, validation_features=self.val_data,
                            train_labels=self.train_labels, validation_labels=self.val_labels)
+
+    def tearDown(self):
+        shutil.rmtree(self.train_config.checkpoint_dir, ignore_errors=True)
+        shutil.rmtree(self.train_config.log_dir, ignore_errors=True)
 
 
 if __name__ == '__main__':
