@@ -29,13 +29,13 @@ class IAMDatasetPreparator(DatasetPreparator):
         train_images, test_images, train_labels, test_labels = train_test_split(
             images,
             labels,
-            test_size=test_size,
+            test_size=validation_size,
             random_state=128
         )
         validation_images, test_images, validation_labels, test_labels = train_test_split(
             test_images,
             test_labels,
-            test_size=validation_size,
+            test_size=test_size,
             random_state=128
         )
         return train_images, train_labels, validation_images, validation_labels, test_images, test_labels

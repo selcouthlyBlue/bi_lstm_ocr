@@ -66,7 +66,7 @@ class TensorflowNetwork(Network):
 
         print('loading validation data, please wait---------------------', end=' ')
         val_feeder = DataIterator(validation_features, validation_labels, train_config.batch_size)
-        print('number of training images: ', train_feeder.get_number_of_examples())
+        print('number of validation images: ', val_feeder.get_number_of_examples())
 
         num_train_samples = train_feeder.get_number_of_examples()
         num_batches_per_epoch = int(num_train_samples/train_config.batch_size)
@@ -112,8 +112,8 @@ class TensorflowNetwork(Network):
                     if step % train_config.validation_steps == 0:
                         dense_decoded, last_batch_err = sess.run([self.dense_decoded, self.label_error_rate], val_feed)
                         avg_train_cost = train_cost/((current_batch_number + 1) * train_config.batch_size)
-                        print("Epoch {}/{}, avg_train_cost: {:.3f}, last_batch_err: {:.3f}, time: {:.3f}"
-                              .format(current_epoch + 1, train_config.num_epochs, avg_train_cost, last_batch_err, time.time() - start))
+                        print("Batch {}/{}, Epoch {}/{}, avg_train_cost: {:.3f}, last_batch_err: {:.3f}, time: {:.3f}"
+                              .format(current_batch_number, num_batches_per_epoch, current_epoch + 1, train_config.num_epochs, avg_train_cost, last_batch_err, time.time() - start))
 
     def _get_batch_feed(self, current_batch_number, shuffle_index, train_feeder):
         batch_train_inputs, batch_train_seq_len, batch_train_labels = train_feeder.get_next_batch(current_batch_number,

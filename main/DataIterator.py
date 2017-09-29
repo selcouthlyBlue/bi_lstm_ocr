@@ -1,5 +1,8 @@
 import numpy as np
 
+from main.CV2ImagePreprocessor import CV2ImagePreprocessor
+
+
 class DataIterator:
     def __init__(self, features, labels, batch_size=1):
         self.features = features
@@ -21,6 +24,8 @@ class DataIterator:
         )]
 
         batch_inputs = [self.features[i] for i in indices]
+        batch_inputs = CV2ImagePreprocessor.read(batch_inputs)
+        batch_inputs = CV2ImagePreprocessor.resize(batch_inputs, (1024, 128))
         batch_labels = [self.labels[i] for i in indices]
 
         batch_seq_len = self._get_input_lens(np.array(batch_inputs))
@@ -31,8 +36,7 @@ class DataIterator:
         lengths = np.asarray([len(s) for s in sequences], dtype=np.int64)
         return lengths
 
-    @staticmethod
-    def sparse_tuple_from_label(sequences, dtype=np.int32):
+    def sparse_tuple_from_label(self, sequences, dtype=np.int32):
         indices = []
         values = []
 
@@ -47,4 +51,6 @@ class DataIterator:
         return indices, values, shape
 
     def get_whole_data(self):
-        return self.features, self._get_input_lens(np.array(self.features)), self.sparse_tuple_from_label(self.labels)
+        images = CV2ImagePreprocessor.read(self.features)
+        images = CV2ImagePreprocessor.resize(images, (1024, 128))
+        return images, self._get_input_lens(np.array(self.features)), self.sparse_tuple_from_label(self.labels)

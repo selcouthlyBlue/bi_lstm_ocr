@@ -15,10 +15,8 @@ class NetworkTest(tf.test.TestCase):
         self.network = TensorflowNetwork(network_config)
         dataset_config = DatasetConfig()
         image_paths, labels = IAMDatasetPreparator.get_image_paths_and_labels_from(dataset_config)
-        images = CV2ImagePreprocessor.read(image_paths)
-        images = CV2ImagePreprocessor.resize(images, (1024, 128))
         self.train_data, self.train_labels, self.val_data, self.val_labels, self.test_data, self.test_labels = \
-            IAMDatasetPreparator.split_into_train_validation_and_test_sets(images, 0.5, 0.5, labels)
+            IAMDatasetPreparator.split_into_train_validation_and_test_sets(image_paths, 0.5, 0.5, labels)
         self.train_config = TrainConfig()
 
     def test_train_network(self):

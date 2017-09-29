@@ -19,10 +19,6 @@ class CV2ImagePreprocessor(ImagePreprocessor):
     @staticmethod
     def read(image_paths):
         images = []
-        i = 0
         for image_path in image_paths:
-            if i % 1000 == 0:
-                print("Read images:", i, "/", len(image_paths))
             images.append(cv2.imread(image_path, 0).astype(np.float32))
-            i += 1
         return images
