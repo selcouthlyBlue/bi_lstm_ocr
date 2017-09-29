@@ -47,4 +47,4 @@ class DataIterator:
         return indices, values, shape
 
     def get_whole_data(self):
-        return self.features, self._get_input_lens(np.array(self.features)), self.labels
+        return self.features, self._get_input_lens(np.array(self.features)), self.sparse_tuple_from_label(self.labels)
