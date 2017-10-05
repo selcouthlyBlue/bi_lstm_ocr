@@ -23,7 +23,7 @@ class TensorflowNetwork(Network):
         with self.graph.as_default():
             self.inputs = tf.placeholder(tf.float32, [None, None, network_config.num_features], name="input")
             self.labels = tf.sparse_placeholder(tf.int32, name="label")
-            self.seq_len = tf.placeholder(tf.int32, [None])
+            self.seq_len = tf.placeholder(tf.int32, [None], name="seq_len_input")
 
             logits = self._bidirectional_lstm_layers(
                 network_config.num_hidden_units,
@@ -75,9 +75,11 @@ class TensorflowNetwork(Network):
         with tf.Session(graph=self.graph, config=config) as sess:
             sess.run(tf.global_variables_initializer())
 
+            log_dir = train_config.log_dir + 'train'
+
             saver = tf.train.Saver(max_to_keep=5)
 
-            train_writer = tf.summary.FileWriter(train_config.log_dir + 'train', sess.graph)
+            train_writer = tf.summary.FileWriter(log_dir, sess.graph)
             if train_config.is_restore:
                 ckpt = tf.train.latest_checkpoint(train_config.checkpoint_dir)
                 if ckpt:
@@ -107,7 +109,9 @@ class TensorflowNetwork(Network):
                     if not os.path.isdir(train_config.checkpoint_dir):
                         os.mkdir(train_config.checkpoint_dir)
                     logger.info('save the checkpoint of {}'.format(step))
-                    saver.save(sess, os.path.join(train_config.checkpoint_dir, 'ocr-model'), global_step=step)
+
+                    tf.train.write_graph(sess.graph_def, log_dir, 'bi_lstm_ctc_ocr.pbtxt')
+                    saver.save(sess, os.path.join(train_config.checkpoint_dir, 'ocr-model-{}.ckpt'.format(current_epoch)), global_step=step)
 
                     if step % train_config.validation_steps == 0:
                         dense_decoded, last_batch_err = sess.run([self.dense_decoded, self.label_error_rate], val_feed)

@@ -1,7 +1,5 @@
-import shutil
 import tensorflow as tf
 
-from main.CV2ImagePreprocessor import CV2ImagePreprocessor
 from main.IAMDatasetPreparator import IAMDatasetPreparator
 from main.TFNetwork import TensorflowNetwork
 from test_files.configs.dummy_dataset_config import DatasetConfig
@@ -23,9 +21,15 @@ class NetworkTest(tf.test.TestCase):
         self.network.train(self.train_config, train_features=self.train_data, validation_features=self.val_data,
                            train_labels=self.train_labels, validation_labels=self.val_labels)
 
+    def test_predict_using_network(self):
+        self.network.predict(self.test_data)
+
+    """
     def tearDown(self):
         shutil.rmtree(self.train_config.checkpoint_dir, ignore_errors=True)
         shutil.rmtree(self.train_config.log_dir, ignore_errors=True)
+
+    """
 
 
 if __name__ == '__main__':
