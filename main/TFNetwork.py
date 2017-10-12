@@ -120,14 +120,14 @@ class TensorflowNetwork(Network):
                               .format(current_batch_number, num_batches_per_epoch, current_epoch + 1, train_config.num_epochs, avg_train_cost, last_batch_err, time.time() - start))
 
     def _get_batch_feed(self, current_batch_number, shuffle_index, train_feeder):
-        batch_train_inputs, batch_train_seq_len, batch_train_labels = train_feeder.get_next_batch(current_batch_number,
+        batch_inputs, batch_seq_len, batch_labels = train_feeder.get_next_batch(current_batch_number,
                                                                                                   shuffle_index)
-        train_feed = {
-            self.inputs: batch_train_inputs,
-            self.labels: batch_train_labels,
-            self.seq_len: batch_train_seq_len
+        feed = {
+            self.inputs: batch_inputs,
+            self.labels: batch_labels,
+            self.seq_len: batch_seq_len
         }
-        return train_feed
+        return feed
 
     def test(self, test_features, test_labels=None):
         print("I'm testing!")
@@ -139,12 +139,8 @@ class TensorflowNetwork(Network):
         lstm_fw_cells = [tf.contrib.rnn.BasicLSTMCell(num_hidden, forget_bias=1.0) for _ in range(num_layers)]
         lstm_bw_cells = [tf.contrib.rnn.BasicLSTMCell(num_hidden, forget_bias=1.0) for _ in range(num_layers)]
 
-        try:
-            outputs, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(lstm_fw_cells, lstm_bw_cells,
+        outputs, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(lstm_fw_cells, lstm_bw_cells,
                                                                            self.inputs, dtype=tf.float32)
-        except Exception:
-            outputs = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(lstm_fw_cells, lstm_bw_cells,
-                                                                     self.inputs, dtype=tf.float32)
 
         batch_size = tf.shape(self.inputs)[0]
 

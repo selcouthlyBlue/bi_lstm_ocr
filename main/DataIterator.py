@@ -29,7 +29,6 @@ class DataIterator:
         batch_labels = [self.labels[i] for i in indices]
 
         batch_seq_len = self._get_input_lens(np.array(batch_inputs))
-        print(batch_seq_len)
         batch_labels = self.sparse_tuple_from_label(batch_labels)
         return batch_inputs,batch_seq_len,batch_labels
 
