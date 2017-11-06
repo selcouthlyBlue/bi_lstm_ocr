@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from main.IAMDatasetPreparator import IAMDatasetPreparator
-from main.TFNetwork import TensorflowNetwork
+from main.TFStackedBidirectionalLstmNetwork import TensorflowNetwork
 from test_files.configs.dummy_dataset_config import DatasetConfig
 from test_files.configs.dummy_network_config import NetworkConfig
 from test_files.configs.dummy_train_config import TrainConfig

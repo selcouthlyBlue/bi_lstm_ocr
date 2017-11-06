@@ -1,5 +1,5 @@
 from main.IAMDatasetPreparator import IAMDatasetPreparator
-from main.TFNetwork import TensorflowNetwork
+from main.TFStackedBidirectionalLstmNetwork import TensorflowNetwork
 from main.configs.dataset_config import DatasetConfig
 from main.configs.network_config import NetworkConfig
 from main.configs.train_config import TrainConfig
