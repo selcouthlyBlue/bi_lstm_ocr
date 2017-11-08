@@ -7,7 +7,7 @@ from main.configs.train_config import TrainConfig
 network_config = NetworkConfig()
 network = TensorflowNetwork(network_config)
 dataset_config = DatasetConfig()
-image_paths, labels = IAMDatasetPreparator.get_image_paths_and_labels_from(dataset_config)
+image_paths, labels = IAMDatasetPreparator.get_dataset_from(dataset_config)
 train_data, train_labels, val_data, val_labels, _, _ = \
             IAMDatasetPreparator.split_into_train_validation_and_test_sets(image_paths, 0.2, 0.5, labels)
 train_config = TrainConfig()

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 class DatasetPreparator(ABC):
     @staticmethod
     @abstractmethod
-    def get_image_paths_and_labels_from(dataset_config):
+    def get_dataset_from(dataset_config):
         raise NotImplementedError
 
     @staticmethod

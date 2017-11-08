@@ -9,7 +9,7 @@ from main.interfaces.dataset_preparator import DatasetPreparator
 
 class IAMDatasetPreparator(DatasetPreparator):
     @staticmethod
-    def get_image_paths_and_labels_from(iam_dataset_config):
+    def get_dataset_from(iam_dataset_config):
         image_paths = []
         labels = []
         with open(iam_dataset_config.labels_file) as f:

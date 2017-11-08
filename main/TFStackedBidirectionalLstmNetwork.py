@@ -38,9 +38,9 @@ class TensorflowNetwork(Network):
             self.optimizer = tf.train.AdamOptimizer(network_config.learning_rate).minimize(self.cost)
             self.decoded, _ = tf.nn.ctc_beam_search_decoder(inputs=logits, sequence_length=self.seq_len, merge_repeated=False)
             self.dense_decoded = tf.sparse_to_dense(tf.to_int32(self.decoded[0].indices),
-                                                           tf.to_int32(self.decoded[0].dense_shape),
-                                                           tf.to_int32(self.decoded[0].values),
-                                                           name="output")
+               tf.to_int32(self.decoded[0].dense_shape),
+               tf.to_int32(self.decoded[0].values),
+               name="output")
             self.label_error_rate = tf.reduce_mean(tf.edit_distance(tf.cast(self.decoded[0], tf.int32), self.labels))
 
             tf.summary.scalar('cost', self.cost)

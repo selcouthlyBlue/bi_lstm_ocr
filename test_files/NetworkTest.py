@@ -12,7 +12,7 @@ class NetworkTest(tf.test.TestCase):
         network_config = NetworkConfig()
         self.network = TensorflowNetwork(network_config)
         dataset_config = DatasetConfig()
-        image_paths, labels = IAMDatasetPreparator.get_image_paths_and_labels_from(dataset_config)
+        image_paths, labels = IAMDatasetPreparator.get_dataset_from(dataset_config)
         self.train_data, self.train_labels, self.val_data, self.val_labels, self.test_data, self.test_labels = \
             IAMDatasetPreparator.split_into_train_validation_and_test_sets(image_paths, 0.5, 0.5, labels)
         self.train_config = TrainConfig()
