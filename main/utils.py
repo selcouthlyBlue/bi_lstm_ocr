@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.python.tools import freeze_graph, optimize_for_inference_lib
 
+def load_charset(charset_file):
+    return ''.join([line.rstrip('\n') for line in open(charset_file)])
 
 def freeze(input_graph_path, checkpoint_path, output_node_names, input_saver_def_path="", input_binary=False,
            restore_op_name="save/restore_all", filename_tensor_name="save/Const:0",

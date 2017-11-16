@@ -11,10 +11,7 @@ import logging
 from main.DataIterator import DataIterator
 from main.EncoderDecoder import EncoderDecoder
 from main.interfaces.network import Network
-
-
-def load_charset(charset_file):
-    return ''.join([line.rstrip('\n') for line in open(charset_file)])
+from main.utils import load_charset
 
 
 class TensorflowNetwork(Network):
